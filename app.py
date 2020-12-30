@@ -16,10 +16,15 @@ class ReqHandler(Resource):
             query = make_it_ok(query)
             ans = get(query)
             res = empty_filter(ans)
-            if res[0] == res[1]:
+            if len(res) < 2:
                 index = render_template("index.html", qu=query,
-                                        p1="it looks like there is no error in your query!",
-                                        p2=(res[0] if len(res) > 0 else ""), p3="", p4="", p5="", p6="", p7="", p8="",
+                                        p1=(res[0] if len(res) > 0 else ""),
+                                        p2="", p3="", p4="", p5="", p6="", p7="", p8="",
+                                        p9="", p10="")
+            elif res[0] == res[1]:
+                index = render_template("index.html", qu=query,
+                                        p1=(res[0] if len(res) > 0 else ""),
+                                        p2="", p3="", p4="", p5="", p6="", p7="", p8="",
                                         p9="", p10="")
             else:
                 index = render_template("index.html", qu=query,

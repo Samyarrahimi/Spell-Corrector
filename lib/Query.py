@@ -52,8 +52,10 @@ def combine(listOfLists):
         result.append('')
 
     for ls in listOfLists:
-        for i in range(10):
+        for i in range(len(ls)):
             if len(ls) == 1:
+                result[i] = result[i] + ' ' + ls[0]
+            elif len(ls) < 10:
                 result[i] = result[i] + ' ' + ls[0]
             else:
                 result[i] = result[i] + ' ' + ls[i]
