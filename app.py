@@ -1,4 +1,4 @@
-from flask import Flask, request, make_response, render_template
+from flask import Flask, request, make_response, render_template, jsonify
 from flask_restful import Resource, Api
 from lib.Query import get, validation_test, empty_filter, make_it_ok
 
@@ -11,11 +11,14 @@ class ReqHandler(Resource):
     def get(self):
         args = request.args
         query = args['q']
+        query = query.lstrip(" ")
+        query = query.rstrip(" ")
         is_valid = validation_test(query)
         if is_valid:
             query = make_it_ok(query)
             ans = get(query)
             res = empty_filter(ans)
+
             if len(res) < 2:
                 index = render_template("index.html", qu=query,
                                         p1=(res[0] if len(res) > 0 else ""),

@@ -1,10 +1,11 @@
 import lib.SpellCorrection as sc
+import lib.evaluate
+from difflib import SequenceMatcher
+import pickle
 import re
 
-
-def get(string):
-    tokens = str(string).split(' ')
-    return spell_check(tokens)
+with open("./sources/Wordfrec-wiki.pkl", "rb") as table:
+    freq = pickle.load(table)
 
 
 def make_it_ok(string):
@@ -32,39 +33,82 @@ def validation_test(string):
     return True
 
 
-def spell_check(tokens):
-    result = list()
+def get(string):
+    tokens = string.split(" ")
+    suggestions = list()
+
     for token in tokens:
-        words = sc.word_counter(token)
-        top10 = sc.find_top10(words, token)
-        if top10[0] == token:
-            result.append([token])
-        elif correction_check(top10, token):
-            result.append(top10)
+        if freq.get(token):
+            suggestions.append(token)
         else:
-            result.append(sc.find_similar(token, words)[:10])
+            if len(token) > 5:
+                tmp = list(spell_check(token))
+                for i in tmp:
+                    str.strip(i)
+                try:
+                    tmp.sort(key=freq.get, reverse=True)
+                except:
+                    pass
+                suggestions.append(tmp)
+            else:
+                suggestions.append(lib.evaluate.evaluate(token))
+    return combine(suggestions)
+
+
+def spell_check(token):
+    result = list()
+    token = str(token)
+    words = sc.word_counter(token)
+    top10 = sc.find_top10(words, token)
+    words = sc.find_similar(token, words)
+    result.append(correction_check(words, top10, token))
+
     return combine(result)
 
 
-def combine(listOfLists):
+def matrix(suggestions):
     result = list()
-    for i in range(10):
-        result.append('')
-
-    for ls in listOfLists:
-        for i in range(len(ls)):
-            if len(ls) == 1:
-                result[i] = result[i] + ' ' + ls[0]
-            elif len(ls) < 10:
-                result[i] = result[i] + ' ' + ls[0]
+    for i in range(len(suggestions)):
+        result.append([])
+    j = 0
+    for s in suggestions:
+        if isinstance(s, str):
+            for i in range(10):
+                result[j].append(s)
+        else:
+            if len(s) > 10:
+                for i in range(10):
+                    result[j].append(s[i])
             else:
-                result[i] = result[i] + ' ' + ls[i]
+                for i in range(10):
+                    try:
 
+                        result[j].append(s[i])
+                    except:
+                        result[j].append(s[0])
+        j += 1
     return result
 
 
-def correction_check(top10, word):
-    for c in top10:
-        if sc.distance_measure(c, word) < 3:
-            return True
-    return False
+def combine(suggestions):
+    result = list()
+    for i in range(10):
+        result.append("")
+    suggestions = matrix(suggestions)
+    j = 0
+    for f in range(10):
+        for suggestion in suggestions:
+            result[j] += suggestion[j] + " "
+        j += 1
+    return result
+
+
+def rate(base_word, comparing_word):
+    return int(SequenceMatcher(None, base_word, comparing_word).ratio() * 100)
+
+
+def correction_check(words, top10, word):
+    for i in range(2):
+        if sc.distance_measure(top10[i], word) > 2:
+            return sc.find_similar(word, words)
+    return top10
